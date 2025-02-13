@@ -10,6 +10,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error,confusion_matrix,classification_report
 
+
+pd.set_option('display.max_rows', 500)
+pd.set_option('display.max_columns', 500)
+pd.set_option('display.width', 1000)
+
 # Step 2 : Reading the Data
 data = pd.read_csv('Data/bankloan.csv')
 print(data.head())
