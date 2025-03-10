@@ -1,30 +1,25 @@
-# Step : 1 Importing the Library
-import numpy as np
+# Importing the Library
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import gradio as gr
+from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_squared_error, confusion_matrix, classification_report
-import dice_ml  # Importing DiCE for Counterfactual Explanations
-from dice_ml import Dice
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import RandomForestClassifier
+import dice_ml
 
-
-
-# Step 2 : Reading the Data
+# Reading the Data
 data = pd.read_csv('Data/bankloan.csv')
 print(data.head())
 
-# Step 3 : Analyzing the Data
+# Analyzing the Data
 print(data.info())
 print(data.describe())
 data.drop('ID', axis='columns', inplace=True)
 print(data.head())
 
-# Step 4 : Visualizing the Data
+# Visualizing the Data
 # Histogram Representation
 data.hist(figsize=(20, 15), color='blue')
 plt.show()
@@ -51,32 +46,57 @@ plt.xticks([0, 1], ['Not Approved', 'Approved'], rotation=0)
 plt.grid(axis='y')
 plt.show()
 
-# Step 5 : Splitting and Training the Data
-X = data.drop(columns=['Personal.Loan'])
-y = data['Personal.Loan']
+# Splitting and Training the Data
+target = data["Personal.Loan"]
+train_dataset, test_dataset, y_train, y_test = train_test_split(data,
+                                                                target,
+                                                                test_size=0.25,
+                                                                random_state=0,
+                                                                stratify=target)
+x_train = train_dataset.drop('Personal.Loan', axis=1)
+x_test = test_dataset.drop('Personal.Loan', axis=1)
 
-x1, x2, y1, y2 = train_test_split(X, y, test_size=0.25, random_state=0)
-r = RandomForestRegressor(n_estimators=10, random_state=0)
-r.fit(x1, y1)
+# dice_ml.Data
+d = dice_ml.Data(dataframe=train_dataset, continuous_features=['Age', 'Experience', 'ZIP.Code', 'CCAvg', 'Mortgage', 'Income', 'Family'],
+                 outcome_name='Personal.Loan')
 
-# Predicting the y
-pred = r.predict(x2)
-auc_score = roc_auc_score(y2, pred)
-print(f"AUC Score: {auc_score}")
+# Preparing the pipeline for the model
+numerical = ['Age', 'Experience', 'ZIP.Code', 'CCAvg', 'Mortgage', 'Income', 'Family']
+categorical = x_train.columns.difference(numerical)
 
-mse = mean_squared_error(y2, pred)
-print(f"MSE Score: {mse}")
+categorical_transformer = Pipeline(steps=[
+    ('onehot', OneHotEncoder(handle_unknown='ignore'))])
 
-# Step 6: Counterfactual Explanations using DiCE
-# Converting data into a format suitable for DiCE
-d = dice_ml.Data(dataframe=data, continuous_features=['Income', 'CCAvg'], outcome_name='Personal.Loan')
+transformations = ColumnTransformer(
+    transformers=[
+        ('cat', categorical_transformer, categorical)])
 
-# Defining the model for DiCE
-m = dice_ml.Model(model=r, backend="sklearn")
+# Append classifier to preprocessing pipeline.
+# Now we have a full prediction pipeline.
+clf = Pipeline(steps=[('preprocessor', transformations),
+                      ('classifier', RandomForestClassifier())])
+model = clf.fit(x_train, y_train)
 
-# Creating a DiCE explainer
-dice_exp = Dice(d, m)
+# Using sklearn backend
+m = dice_ml.Model(model=model, backend="sklearn")
 
-# Generating counterfactual examples
-query_instance = x2.iloc[0]  # Selecting a sample instance
-dice_exp.generate_counterfactuals(query_instance, total_CFs=2, desired_class=1).visualize_as_dataframe()
+# Feature importance
+importances = model.named_steps['classifier'].feature_importances_
+print(importances)
+
+# Using method=random for generating CFs
+exp = dice_ml.Dice(d, m, method="random")
+
+# To display all the outcome
+import pandas as pd; pd.set_option('display.max_rows', 1000); pd.set_option('display.max_columns', 1000); pd.set_option('display.width', 1000)
+
+# Making an instance
+query_instance  = {'Age':22,'Experience': 3,'Income': 23,'ZIP.Code': 94574,'Family': 6,'CCAvg': 6.1,'Education': '2',
+                   'Mortgage': 0,'Securities.Account': '0','CD.Account': '0','Online': '0','CreditCard': '1'}
+# pd.DataFrame([query_instance])
+
+# Generate CFs
+e1 = exp.generate_counterfactuals(x_test[24:25],
+                                  total_CFs=2,
+                                  desired_class="opposite")
+e1.visualize_as_dataframe(show_only_changes=True)
