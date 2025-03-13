@@ -127,7 +127,7 @@ e1 = exp.generate_counterfactuals(pd.DataFrame([new_query_instance]),
                                   proximity_weight= 1.0,
                                   diversity_weight= 1.0,
                                   features_to_vary= features_to_vary,
-                                  permitted_range={'Experience': [0, 50]}                                  )
+                                  permitted_range={'Experience': [0, 50]})
 # Generate CFs
 e1.visualize_as_dataframe(show_only_changes=True)
 
