@@ -70,10 +70,8 @@ model = clf.fit(x_train, y_train, )
 model_predict = model.predict(x_test)
 print(classification_report(y_test, model_predict))
 
-pred = model.predict(x_test)
-
 # Create a confusion matrix using sklearn
-conf_matrix = metrics.confusion_matrix(y_test, pred, labels=[1, 0])
+conf_matrix = metrics.confusion_matrix(y_test, model_predict, labels=[1, 0])
 
 # Plot the confusion matrix using seaborn
 plt.figure(figsize=(6, 6))
