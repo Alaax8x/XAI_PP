@@ -8,6 +8,9 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.ensemble import RandomForestClassifier
 import dice_ml
+from sklearn.metrics import classification_report, f1_score
+from sklearn.utils import resample
+from sklearn import metrics
 
 # Reading the Data
 data = pd.read_csv('Data/bankloan.csv')
@@ -19,36 +22,20 @@ print(data.describe())
 data.drop('ID', axis='columns', inplace=True)
 print(data.head())
 
-# # Visualizing the Data
-# # Histogram Representation
-# data.hist(figsize=(20, 15), color='blue')
-# plt.show()
-#
-# # Box Plot between Personal Loan v/s Income
-# plt.figure(figsize=(5, 5))
-# sns.boxplot(x='Personal.Loan', y='Income', data=data)
-# plt.title('Income vs Personal Loan')
-# plt.xlabel('Personal Loan')
-# plt.ylabel('Income')
-# plt.show()
-#
-# # Counting Loans
-# loan_counts = data['Personal.Loan'].value_counts()
-# print(loan_counts)
-#
-# # Count plot between approved and not approved loans
-# plt.figure(figsize=(8, 6))
-# loan_counts.plot(kind='bar', color=['blue', 'orange'])
-# plt.title('Count of Approved and Not Approved Loans')
-# plt.xlabel('Loan Status')
-# plt.ylabel('Count')
-# plt.xticks([0, 1], ['Not Approved', 'Approved'], rotation=0)
-# plt.grid(axis='y')
-# plt.show()
+# Balancing Data
+minority_class = data[data['Personal.Loan'] == 1]
+majority_class = data[data['Personal.Loan'] == 0]
+
+# Up sample the minority class
+minority_upsampled = resample(minority_class, replace=True, n_samples=len(majority_class), random_state=42)
+
+# Combine the upsampled minority class with the majority class
+balanced_data = pd.concat([majority_class, minority_upsampled])
+print(balanced_data["Personal.Loan"].value_counts())
 
 # Splitting and Training the Data
-target = data["Personal.Loan"]
-train_dataset, test_dataset, y_train, y_test = train_test_split(data,
+target = balanced_data["Personal.Loan"]
+train_dataset, test_dataset, y_train, y_test = train_test_split(balanced_data,
                                                                 target,
                                                                 test_size=0.25,
                                                                 random_state=0,
@@ -77,7 +64,23 @@ transformations = ColumnTransformer(
 # Now we have a full prediction pipeline.
 clf = Pipeline(steps=[('preprocessor', transformations),
                       ('classifier', RandomForestClassifier())])
-model = clf.fit(x_train, y_train)
+model = clf.fit(x_train, y_train, )
+
+# Model evaluation
+model_predict = model.predict(x_test)
+print(classification_report(y_test, model_predict))
+
+pred = model.predict(x_test)
+
+# Create a confusion matrix using sklearn
+conf_matrix = metrics.confusion_matrix(y_test, pred, labels=[1, 0])
+
+# Plot the confusion matrix using seaborn
+plt.figure(figsize=(6, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='g', cmap='PiYG', xticklabels=['Approved','Declined'], yticklabels=['Approved','Declined'])
+plt.xlabel('Predicted Preference', fontsize=12)
+plt.ylabel('Actual Preference', fontsize=12)
+plt.show()
 
 # Using sklearn backend
 m = dice_ml.Model(model=model, backend="sklearn")
@@ -86,23 +89,6 @@ m = dice_ml.Model(model=model, backend="sklearn")
 importances = model.named_steps['classifier'].feature_importances_
 print(importances)
 
-# get MAD
-# mads = d.get_mads(normalized=True)
-# print(mads)
-# create feature weights
-# feature_weights = {}
-# for feature in mads:
-#     feature_weights[feature] = round(1/mads[feature], 2)
-# print(feature_weights)
-
-# max_weight = 10  # Set an upper limit
-# for feature in feature_weights:
-#     if feature_weights[feature] == float('inf'):
-#         feature_weights[feature] = max_weight
-# print(feature_weights)
-# features_weights = {"Age": 10, "Mortgage": 5, "Income": 5, "Family": 10}
-
-
 # To display all the outcome
 import pandas as pd; pd.set_option('display.max_rows', 1000); pd.set_option('display.max_columns', 1000); pd.set_option('display.width', 1000)
 
@@ -110,8 +96,8 @@ import pandas as pd; pd.set_option('display.max_rows', 1000); pd.set_option('dis
 new_query_instance  = {'Age':45,'Experience': 5,'Income': 40,'ZIP.Code': 94574,'Family': 1,'CCAvg': 6.1,'Education': 1,
                    'Mortgage': 160,'Securities.Account': 1,'CD.Account': 1,'Online': 1,'CreditCard': 1}
 
-features_to_vary  = ['Experience','Income','ZIP.Code','CCAvg','Education',
-                   'Mortgage','Securities.Account','CD.Account','Online','CreditCard']
+features_to_vary  = ['Experience','Income','CCAvg','Education',
+                     'Securities.Account','CD.Account','Online','CreditCard']
 # pd.DataFrame([new_query_instance]
 
 # Using method=random for generating CFs
@@ -119,9 +105,7 @@ exp = dice_ml.Dice(d, m, method="random")
 
 # Generate CFs
 e1 = exp.generate_counterfactuals(pd.DataFrame([new_query_instance]),
-                                  total_CFs=5,
+                                  total_CFs=2,
                                   desired_class="opposite",
-                                  proximity_weight=1.5,
-                                  diversity_weight=1.0,
                                   features_to_vary= features_to_vary)
 e1.visualize_as_dataframe(show_only_changes=True)

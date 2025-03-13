@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import gradio as gr
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import roc_auc_score
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.metrics import mean_squared_error,confusion_matrix,classification_report
+from sklearn.metrics import roc_auc_score
 
 
 pd.set_option('display.max_rows', 500)
@@ -83,7 +83,7 @@ X = data.drop(columns=['Personal.Loan'])
 y = data['Personal.Loan']
 #Splitting for training and testing
 x1,x2,y1,y2 = train_test_split(X,y,test_size=0.25,random_state=0)
-r = RandomForestRegressor(n_estimators = 10, random_state = 0)
+r = RandomForestClassifier(n_estimators = 10, random_state = 0)
 r.fit(x1,y1)
 
 # RandomForestRegressor
