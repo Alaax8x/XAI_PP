@@ -121,14 +121,14 @@ new_query_instance  = {'Age':45,'Experience': 5,'Income': 40,'ZIP.Code': 94574,'
 # Using method=random for generating CFs
 exp = dice_ml.Dice(d, m, method="genetic")
 
-# Generate CFs
 e1 = exp.generate_counterfactuals(pd.DataFrame([new_query_instance]),
                                   total_CFs=2,
                                   desired_class="opposite",
-                                  features_to_vary= features_to_vary,
-                                  permitted_range={'Experience': [0, 50]},
                                   proximity_weight= 1.0,
-                                  diversity_weight= 1.0)
+                                  diversity_weight= 1.0,
+                                  features_to_vary= features_to_vary,
+                                  permitted_range={'Experience': [0, 50]}                                  )
+# Generate CFs
 e1.visualize_as_dataframe(show_only_changes=True)
 
 ## Checking for overfitiing ##
