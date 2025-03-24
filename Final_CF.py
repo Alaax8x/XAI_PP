@@ -110,12 +110,12 @@ m = dice_ml.Model(model=model, backend="sklearn")
 import pandas as pd; pd.set_option('display.max_rows', 1000); pd.set_option('display.max_columns', 1000); pd.set_option('display.width', 1000)
 
 ## Making a new instance ##
-
 features_to_vary  = ['Experience','Income','CCAvg','Education',
                      'Securities.Account','CD.Account','Online','CreditCard']
 
 new_query_instance  = {'Age':45,'Experience': 5,'Income': 40,'ZIP.Code': 94574,'Family': 1,'CCAvg': 6.1,'Education': 1,
                    'Mortgage': 160,'Securities.Account': 1,'CD.Account': 1,'Online': 1,'CreditCard': 1}
+x = new_query_instance.get('Experience')
 
 ## Generating counterfactual ##
 # Using method=random for generating CFs
@@ -124,10 +124,8 @@ exp = dice_ml.Dice(d, m, method="genetic")
 e1 = exp.generate_counterfactuals(pd.DataFrame([new_query_instance]),
                                   total_CFs=2,
                                   desired_class="opposite",
-                                  proximity_weight= 1.0,
-                                  diversity_weight= 1.0,
                                   features_to_vary= features_to_vary,
-                                  permitted_range={'Experience': [0, 50]})
+                                  permitted_range={'Experience': [x, x + 10]})
 # Generate CFs
 e1.visualize_as_dataframe(show_only_changes=True)
 
