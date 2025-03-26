@@ -10,7 +10,6 @@ from sklearn import metrics
 import category_encoders as ce
 
 
-
 ## Reading the Data ##
 data = pd.read_csv('Data/bankloan.csv')
 print(data.head())

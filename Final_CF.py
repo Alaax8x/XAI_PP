@@ -20,6 +20,7 @@ print(data.head())
 print(data.info())
 print(data['Experience'].describe())
 data.drop('ID', axis='columns', inplace=True)
+data.drop('ZIP.Code', axis='columns', inplace=True)
 print(data.head())
 
 
@@ -47,12 +48,12 @@ x_train, x_test, y_train, y_test = train_test_split(balanced_dataX,
 
 # dice_ml.Data
 d = dice_ml.Data(dataframe=balanced_data,
-                 continuous_features=['Age', 'Experience', 'ZIP.Code',
+                 continuous_features=['Age', 'Experience',
                                       'CCAvg', 'Mortgage', 'Income', 'Family'],
                  outcome_name='Personal.Loan')
 
 ## Encoding data ##
-numerical = ['Age', 'Experience', 'ZIP.Code', 'CCAvg', 'Mortgage', 'Income', 'Family']
+numerical = ['Age', 'Experience', 'CCAvg', 'Mortgage', 'Income', 'Family']
 categorical = x_train.columns.difference(numerical)
 
 encoder = ce.OrdinalEncoder(cols= categorical)
@@ -113,7 +114,7 @@ import pandas as pd; pd.set_option('display.max_rows', 1000); pd.set_option('dis
 features_to_vary  = ['Experience','Income','CCAvg','Education',
                      'Securities.Account','CD.Account','Online','CreditCard']
 
-new_query_instance  = {'Age':45,'Experience': 5,'Income': 40,'ZIP.Code': 94574,'Family': 1,'CCAvg': 6.1,'Education': 1,
+new_query_instance  = {'Age':45,'Experience': 5,'Income': 40, 'Family': 1,'CCAvg': 6.1,'Education': 1,
                    'Mortgage': 160,'Securities.Account': 1,'CD.Account': 1,'Online': 1,'CreditCard': 1}
 x = new_query_instance.get('Experience')
 

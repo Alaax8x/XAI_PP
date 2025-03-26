@@ -15,6 +15,7 @@ from supertree import SuperTree
 # Load Data
 data = pd.read_csv('data/bankloan.csv')
 data.drop('ID', axis='columns', inplace=True)
+data.drop('ZIP.Code', axis='columns', inplace=True)
 
 # Balance the Data
 minority_class = data[data['Personal.Loan'] == 1]
@@ -30,7 +31,7 @@ x_train, x_test, y_train, y_test = train_test_split(
 )
 
 # Encode Categorical Data
-numerical = ['Age', 'Experience', 'ZIP.Code', 'CCAvg', 'Mortgage', 'Income', 'Family']
+numerical = ['Age', 'Experience', 'CCAvg', 'Mortgage', 'Income', 'Family']
 categorical = x_train.columns.difference(numerical)
 encoder = ce.OrdinalEncoder(cols=categorical)
 x_train = encoder.fit_transform(x_train)
