@@ -15,6 +15,17 @@ from sklearn.model_selection import cross_val_score
 ## Reading the Data ##
 data = pd.read_csv('Data/bankloan.csv')
 print(data.head())
+print(data.describe())
+
+# Check for negatives in Experience
+negatives = []
+for x in data["Experience"]:
+    if x < 0:
+        negatives.append(x)
+print(negatives)
+
+# Converting negatives to their absolute value
+data["Experience"] = abs(data["Experience"])
 
 ## Analyzing the Data ##
 print(data.info())
