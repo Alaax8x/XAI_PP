@@ -1,13 +1,10 @@
 ## Importing the Library ##
 import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 import dice_ml
 from sklearn.metrics import classification_report, f1_score
 from sklearn.utils import resample
-from sklearn import metrics
 import category_encoders as ce
 from sklearn.model_selection import cross_val_score
 
@@ -84,36 +81,6 @@ model_predict = model.predict(x_test)
 
 # Creating an evaluation report
 print(classification_report(y_test, model_predict))
-
-# Create a confusion matrix using sklearn
-conf_matrix = metrics.confusion_matrix(y_test, model_predict, labels=[1, 0])
-
-# Plot the confusion matrix using seaborn
-plt.figure(figsize=(6, 6))
-sns.heatmap(conf_matrix, annot=True, fmt='g', cmap='PiYG',
-            xticklabels=['Approved','Declined'], yticklabels=['Approved','Declined'])
-plt.xlabel('Predicted Preference', fontsize=12)
-plt.ylabel('Actual Preference', fontsize=12)
-plt.show()
-
-# Extract feature importance and sort them
-importances = model.feature_importances_
-feature_names = x_train.columns
-sorted_features = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)
-
-# Convert to lists for plotting
-features, importance_values = zip(*sorted_features)
-
-# Create the plot
-plt.figure(figsize=(10, 6))
-sns.barplot(x=importance_values, y=features, palette="viridis")
-
-# Add labels and title
-plt.xlabel("Feature Importance Score", fontsize=12)
-plt.ylabel("Features", fontsize=12)
-plt.title("Feature Importance in Loan Approval Model", fontsize=14)
-plt.show()
-
 
 # Using sklearn backend
 m = dice_ml.Model(model=model, backend="sklearn")

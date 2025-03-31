@@ -10,26 +10,27 @@ from sklearn.tree import plot_tree
 from sklearn.tree import export_graphviz
 import graphviz
 from supertree import SuperTree
+from sklearn import metrics
+import seaborn as sns
 
 
-# Load Data
+####### Setting the Data
 data = pd.read_csv('data/bankloan.csv')
 data.drop('ID', axis='columns', inplace=True)
 data.drop('ZIP.Code', axis='columns', inplace=True)
-
+# Converting negatives to their absolute value
+data["Experience"] = abs(data["Experience"])
 # Balance the Data
 minority_class = data[data['Personal.Loan'] == 1]
 majority_class = data[data['Personal.Loan'] == 0]
 minority_upsampled = resample(minority_class, replace=True, n_samples=len(majority_class), random_state=42)
 balanced_data = pd.concat([majority_class, minority_upsampled])
-
 # Split Data
 target = balanced_data["Personal.Loan"]
 balanced_dataX = balanced_data.drop('Personal.Loan', axis=1)
 x_train, x_test, y_train, y_test = train_test_split(
     balanced_dataX, target, test_size=0.25, random_state=0, stratify=target, shuffle=True
 )
-
 # Encode Categorical Data
 numerical = ['Age', 'Experience', 'CCAvg', 'Mortgage', 'Income', 'Family']
 categorical = x_train.columns.difference(numerical)
@@ -37,7 +38,7 @@ encoder = ce.OrdinalEncoder(cols=categorical)
 x_train = encoder.fit_transform(x_train)
 x_test = encoder.transform(x_test)
 
-# Train Model
+######## Train Model
 model = RandomForestClassifier(max_depth=5, random_state=0)
 model.fit(x_train, y_train)
 ## Model evaluation ##
@@ -82,3 +83,32 @@ st = SuperTree(
 )
 
 st.save_html("RF_Vis/Dtree/random_forest_tree.html")
+
+# Create a confusion matrix using sklearn
+conf_matrix = metrics.confusion_matrix(y_test, model_predict, labels=[1, 0])
+
+# Plot the confusion matrix using seaborn
+plt.figure(figsize=(6, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='g', cmap='PiYG',
+            xticklabels=['Approved','Declined'], yticklabels=['Approved','Declined'])
+plt.xlabel('Predicted Preference', fontsize=12)
+plt.ylabel('Actual Preference', fontsize=12)
+plt.show()
+
+# Extract feature importance and sort them
+importances = model.feature_importances_
+feature_names = x_train.columns
+sorted_features = sorted(zip(feature_names, importances), key=lambda x: x[1], reverse=True)
+
+# Convert to lists for plotting
+features, importance_values = zip(*sorted_features)
+
+# Create the plot
+plt.figure(figsize=(10, 6))
+sns.barplot(x=importance_values, y=features, palette="viridis")
+
+# Add labels and title
+plt.xlabel("Feature Importance Score", fontsize=12)
+plt.ylabel("Features", fontsize=12)
+plt.title("Feature Importance in Loan Approval Model", fontsize=14)
+plt.show()
