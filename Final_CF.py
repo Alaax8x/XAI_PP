@@ -7,6 +7,7 @@ from sklearn.metrics import classification_report, f1_score
 from sklearn.utils import resample
 import category_encoders as ce
 from sklearn.model_selection import cross_val_score
+from sklearn.metrics import roc_curve, roc_auc_score
 
 
 ## Reading the Data ##
@@ -111,3 +112,18 @@ e1.visualize_as_dataframe(show_only_changes=True)
 ## Checking for overfitiing ##
 scores = cross_val_score(model, x_train, y_train, cv=5, scoring='accuracy')
 print("Cross-validation accuracy:", scores.mean())
+
+from sklearn.metrics import cohen_kappa_score
+score = cohen_kappa_score(y_test, model_predict)
+print(f'Kappa {score}')
+
+from sklearn.metrics import log_loss
+y_prob = model.predict_proba(x_test)
+loss = log_loss(y_test, y_prob)
+print(f'Loss {loss}')
+
+y_prob = model.predict_proba(x_test)[:, 1]  # probabilities for class 1 only
+
+# AUC Score
+auc_score = roc_auc_score(y_test, y_prob)
+print("AUC Score:", auc_score)

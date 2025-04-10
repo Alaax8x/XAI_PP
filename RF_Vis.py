@@ -12,7 +12,7 @@ import graphviz
 from supertree import SuperTree
 from sklearn import metrics
 import seaborn as sns
-
+from sklearn.metrics import roc_curve, roc_auc_score
 
 ####### Setting the Data
 data = pd.read_csv('data/bankloan.csv')
@@ -111,4 +111,26 @@ sns.barplot(x=importance_values, y=features, palette="viridis")
 plt.xlabel("Feature Importance Score", fontsize=12)
 plt.ylabel("Features", fontsize=12)
 plt.title("Feature Importance in Loan Approval Model", fontsize=14)
+plt.show()
+
+
+############# AUC and ROC
+y_prob = model.predict_proba(x_test)[:, 1]  # probabilities for class 1 only
+
+# ROC Curve values
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+
+# AUC Score
+auc_score = roc_auc_score(y_test, y_prob)
+print("AUC Score:", auc_score)
+
+# Plot ROC Curve
+plt.figure(figsize=(8, 6))
+plt.plot(fpr, tpr, label=f"AUC = {auc_score:.3f}")
+plt.plot([0, 1], [0, 1], linestyle='--', color='gray')  # Random guess line
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend(loc="lower right")
+plt.grid()
 plt.show()
