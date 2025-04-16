@@ -83,6 +83,25 @@ model_predict = model.predict(x_test)
 # Creating an evaluation report
 print(classification_report(y_test, model_predict))
 
+## Checking for overfitiing ##
+scores = cross_val_score(model, x_train, y_train, cv=5, scoring='accuracy')
+print("Cross-validation accuracy:", scores.mean())
+
+from sklearn.metrics import cohen_kappa_score
+score = cohen_kappa_score(y_test, model_predict)
+print(f'Kappa {score}')
+
+from sklearn.metrics import log_loss
+y_prob = model.predict_proba(x_test)
+loss = log_loss(y_test, y_prob)
+print(f'Loss {loss}')
+
+y_prob = model.predict_proba(x_test)[:, 1]  # probabilities for class 1 only
+
+# AUC Score
+auc_score = roc_auc_score(y_test, y_prob)
+print("AUC Score:", auc_score)
+
 # Using sklearn backend
 m = dice_ml.Model(model=model, backend="sklearn")
 
@@ -108,22 +127,3 @@ e1 = exp.generate_counterfactuals(pd.DataFrame([new_query_instance]),
                                   permitted_range={'Experience': [x, x + 10]})
 # Generate CFs
 e1.visualize_as_dataframe(show_only_changes=True)
-
-## Checking for overfitiing ##
-scores = cross_val_score(model, x_train, y_train, cv=5, scoring='accuracy')
-print("Cross-validation accuracy:", scores.mean())
-
-from sklearn.metrics import cohen_kappa_score
-score = cohen_kappa_score(y_test, model_predict)
-print(f'Kappa {score}')
-
-from sklearn.metrics import log_loss
-y_prob = model.predict_proba(x_test)
-loss = log_loss(y_test, y_prob)
-print(f'Loss {loss}')
-
-y_prob = model.predict_proba(x_test)[:, 1]  # probabilities for class 1 only
-
-# AUC Score
-auc_score = roc_auc_score(y_test, y_prob)
-print("AUC Score:", auc_score)
